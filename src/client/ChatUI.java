@@ -44,11 +44,14 @@ public class ChatUI implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
         String stringToSend = mainTextField.getText();
-        chatClient.sendMessageToServer(stringToSend);
+        if (!stringToSend.equals("")){
+
+            chatClient.sendMessageToServer(stringToSend);
+        }
         mainTextField.setText("");
 
+        chatClient.receiveMessageFromServerAndSendItToUI();
 
-        chatTextArea.append("");
-
+        // chatTextArea.append("");
     }
 }
