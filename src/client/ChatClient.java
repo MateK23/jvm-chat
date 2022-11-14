@@ -9,14 +9,20 @@ import java.time.format.DateTimeFormatter;
 
 public class ChatClient {
     private String username;
-    private DateTimeFormatter dtf = DateTimeFormatter.ofPattern("HH:mm");
+    private final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("HH:mm");
     ChatUI clientUI;
-    boolean chatSyncLoop = true;
-    private String host;
-    private int port;
+    private final String host;
+    private final int port;
+    Socket clientSocket;
 
-    // sendMessageToServer("Test");
-    // receiveMessageFromServerAndSendItToUI();
+
+    private void openConnectionToServer() throws IOException {
+        clientSocket = new Socket(host, port);
+    }
+
+    private void closeConnectionToServer() throws IOException {
+        clientSocket.close();
+    }
 
 
     public ChatClient(String host, int port, ChatUI clientUI) {
@@ -24,41 +30,44 @@ public class ChatClient {
         this.host = host;
         this.port = port;
 
-//        while (chatSyncLoop){
-//            receiveMessageFromServerAndSendItToUI();
-//        }
-
-    }
-
-    public void setUser(String username) {
-        this.username = username;
-    }
-
-    public void sendMessageToServer(String message) {
-        String formattedMessage = formatMessage(message);
-
-
         try {
-            Socket clientSocket = new Socket(host, port);
-            ObjectOutputStream outputStream = new ObjectOutputStream(clientSocket.getOutputStream());
-            outputStream.writeObject(formattedMessage);
-            outputStream.close();
-            clientSocket.close();
+            openConnectionToServer();
+
+
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    public void receiveMessageFromServerAndSendItToUI() {
+
+    public void sendMessageToServer(String message) {
+        String formattedMessage = formatMessage(message);
+
         try {
-            Socket clientSocket = new Socket(host, port);
-            ObjectInputStream objectInputStream = new ObjectInputStream(clientSocket.getInputStream());
-            String response = (String) objectInputStream.readObject();
-            clientUI.addStringToChat(response);
-            clientSocket.close();
+            if (clientSocket != null) {
+                ObjectOutputStream outputStream = new ObjectOutputStream(clientSocket.getOutputStream());
+                outputStream.writeObject(formattedMessage);
+                outputStream.close();
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void receiveMessageFromServer() {
+        try {
+            if (clientSocket != null) {
+                ObjectInputStream objectInputStream = new ObjectInputStream(clientSocket.getInputStream());
+                String message = (String) objectInputStream.readObject();
+                sendMessageToUserInterface(message);
+            }
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private void sendMessageToUserInterface(String message){
+        clientUI.addStringToChat(message);
     }
 
     private String formatMessage(String message) {
@@ -68,5 +77,9 @@ public class ChatClient {
     private String getCurrentTime() {
         LocalDateTime now = LocalDateTime.now();
         return dtf.format(now);
+    }
+
+    public void setUser(String username) {
+        this.username = username;
     }
 }

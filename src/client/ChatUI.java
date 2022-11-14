@@ -2,15 +2,14 @@ package client;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 
-public class ChatUI implements ActionListener {
+public class ChatUI {
     private JPanel mainPanel;
     private JTextField mainTextField;
     private JButton btnSend;
     private JTextArea chatTextArea;
     private JLabel usernameLabel;
+    private JButton refreshButton;
     ChatClient chatClient = new ChatClient("localhost", 9090, this);
 
     public ChatUI(String username) {
@@ -26,7 +25,7 @@ public class ChatUI implements ActionListener {
         frame.setVisible(true);
         frame.setTitle("Java Chat by MateK");
 
-        btnSend.addActionListener(this);
+        initButtons();
 
         usernameLabel.setText("Chatting as: " + username);
     }
@@ -41,17 +40,19 @@ public class ChatUI implements ActionListener {
         }
     }
 
-    @Override
-    public void actionPerformed(ActionEvent e) {
-        String stringToSend = mainTextField.getText();
-        if (!stringToSend.equals("")){
+    private void initButtons(){
 
-            chatClient.sendMessageToServer(stringToSend);
-        }
-        mainTextField.setText("");
+        btnSend.addActionListener(e -> {
+            String stringToSend = mainTextField.getText();
+            if (!stringToSend.equals("")){
 
-        chatClient.receiveMessageFromServerAndSendItToUI();
+                chatClient.sendMessageToServer(stringToSend);
+            }
+            mainTextField.setText("");
 
-        // chatTextArea.append("");
+            chatClient.receiveMessageFromServer();
+        });
+
+        refreshButton.addActionListener(e -> chatClient.receiveMessageFromServer());
     }
 }

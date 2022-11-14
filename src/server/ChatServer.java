@@ -1,30 +1,28 @@
 package server;
 
+import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 
 public class ChatServer {
+    String[] strArr;
     boolean serverActiveLoop = true;
     public ChatServer(int port) {
-        try{
-            ServerSocket serverSocket = new ServerSocket(port);
+        try {
+            ServerSocket serverSocket;
+            serverSocket = new ServerSocket(port);
             System.out.println("Server is On...");
             Socket clientSocket = serverSocket.accept();
             System.out.println("Connection accepted");
 
-
-            while(serverActiveLoop){
-                receiveMessage(clientSocket);
-            }
-
-            serverSocket.close();
-        }catch (Exception e){
-
-            new ChatServer(port);
+            receiveMessage(clientSocket);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
 
+        new ChatServer(port);
     }
 
     public void receiveMessage(Socket clientSocket){
@@ -36,11 +34,7 @@ public class ChatServer {
                 System.out.println("Getting response");
                 System.out.println("Received from client: " + message);
 
-
-
-
                 broadcastMessage(clientSocket, message);
-                inputStream.close();
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
